@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-headline: "Manrope", sans-serif;
+
+  --color-primary: var(--primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary: var(--on-primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-surface: var(--surface);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-outline-variant: var(--outline-variant);
+  --color-on-surface: var(--on-surface);
+}
+
+:root {
+  --primary: #000666;
+  --primary-container: #1a237e;
+  --on-primary: #ffffff;
+  --secondary: #50606f;
+  --secondary-container: #d1e1f4;
+  --tertiary: #3a0900;
+  --tertiary-container: #5e1500;
+  --on-tertiary-container: #ff6638;
+  --surface: #f7f9fc;
+  --surface-container: #eceef1;
+  --surface-container-low: #f2f4f7;
+  --surface-container-lowest: #ffffff;
+  --outline-variant: #c6c5d4;
+  --on-surface: #191c1e;
+}
+
+.dark {
+  --primary: #d0bcff;
+  --primary-container: #4f378b;
+  --on-primary: #381e72;
+  --secondary: #ccc2dc;
+  --secondary-container: #4a4458;
+  --tertiary: #efb8c8;
+  --tertiary-container: #633b48;
+  --on-tertiary-container: #ffd8e4;
+  --surface: #1c1b1f;
+  --surface-container: #49454f;
+  --surface-container-low: #1c1b1f;
+  --surface-container-lowest: #000000;
+  --outline-variant: #49454f;
+  --on-surface: #e6e1e5;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-sans antialiased transition-colors duration-300;
+  }
+}
+
+.glass-effect {
+  @apply bg-surface/80 backdrop-blur-xl border border-outline-variant/20;
+}
+
+.tech-gradient {
+  @apply bg-gradient-to-br from-primary to-primary-container;
+}
+
+.food-card-shadow {
+  @apply shadow-[0_24px_48px_-12px_rgba(0,0,0,0.2)];
+}

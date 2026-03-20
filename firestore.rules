@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches request.auth.uid)
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - email: string (required, format: email)
+    //   - displayName: string (optional, max 100 chars)
+    //   - role: string (required, enum: ["user", "admin"])
+    //   - updatedAt: timestamp (optional)
+    //
+    // Collection: subscriptions
+    // Document ID: {userId} (matches request.auth.uid)
+    // Fields:
+    //   - userId: string (required, immutable)
+    //   - tier: string (required, enum: ["essential", "elite"])
+    //   - frequency: int (required, enum: [5, 7])
+    //   - deliveryType: map (required) - { lunch: bool, dinner: bool }
+    //   - totalPrice: number (required, positive)
+    //   - updatedAt: timestamp (required)
+    //
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" ||
+          (request.auth.token.email == "sensys.sanketuchil@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isRecent(ts) {
+      return ts is timestamp && 
+             ts > request.time - duration.value(5, 'm') &&
+             ts < request.time + duration.value(5, 'm');
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 && data.uid.size() < 128 &&
+             isValidEmail(data.email) && data.email.size() < 256 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             data.role in ["user", "admin"] &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidSubscription(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() < 128 &&
+             data.tier in ["essential", "elite"] &&
+             data.frequency in [5, 7] &&
+             data.deliveryType is map &&
+             data.deliveryType.lunch is bool &&
+             data.deliveryType.dinner is bool &&
+             data.totalPrice is number && data.totalPrice >= 0 &&
+             data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      
+      allow create: if isAuthenticated() && isOwner(userId) && 
+                      request.resource.data.keys().hasAll(['uid', 'email', 'role']) &&
+                      request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'updatedAt']) &&
+                      isValidUser(request.resource.data) &&
+                      request.resource.data.uid == request.auth.uid &&
+                      (request.resource.data.role == "user" || isAdmin());
+      
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) &&
+                      request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'updatedAt']) &&
+                      isValidUser(request.resource.data) &&
+                      request.resource.data.uid == resource.data.uid &&
+                      (request.resource.data.role == resource.data.role || isAdmin());
+      
+      allow delete: if isAdmin();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if (isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin())) ||
+                      subscriptionId == "guest_test";
+      
+      allow create: if (isAuthenticated() && isOwner(subscriptionId) &&
+                      request.resource.data.keys().hasAll(['userId', 'tier', 'frequency', 'deliveryType', 'totalPrice', 'updatedAt']) &&
+                      request.resource.data.keys().hasOnly(['userId', 'tier', 'frequency', 'deliveryType', 'totalPrice', 'updatedAt']) &&
+                      isValidSubscription(request.resource.data) &&
+                      request.resource.data.userId == request.auth.uid &&
+                      isRecent(request.resource.data.updatedAt)) ||
+                      (subscriptionId == "guest_test" && 
+                       request.resource.data.userId == "guest_test" &&
+                       isValidSubscription(request.resource.data));
+      
+      allow update: if (isAuthenticated() && (isOwner(subscriptionId) || isAdmin()) &&
+                      request.resource.data.keys().hasOnly(['userId', 'tier', 'frequency', 'deliveryType', 'totalPrice', 'updatedAt']) &&
+                      isValidSubscription(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId &&
+                      isRecent(request.resource.data.updatedAt)) ||
+                      (subscriptionId == "guest_test" && 
+                       request.resource.data.userId == "guest_test" &&
+                       isValidSubscription(request.resource.data));
+      
+      allow delete: if isAdmin();
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

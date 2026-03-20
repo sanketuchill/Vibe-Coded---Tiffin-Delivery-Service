@@ -1,0 +1,8 @@
+{
+  "name": "TiffinPro - Executive Meal Concierge",
+  "description": "A premium tiffin delivery portal for the modern Indian professional, featuring AI-powered meal previews and a smart culinary assistant.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

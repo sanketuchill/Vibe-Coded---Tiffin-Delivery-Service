@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profile",
+      "description": "Stores user information and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique ID of the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "subscriptions": {
+      "title": "User Subscription",
+      "description": "Stores details about a user's meal subscription.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who owns this subscription." },
+        "tier": { "type": "string", "enum": ["essential", "elite"], "description": "The subscription tier." },
+        "frequency": { "type": "integer", "description": "Number of days per week." },
+        "deliveryType": {
+          "type": "object",
+          "properties": {
+            "lunch": { "type": "boolean" },
+            "dinner": { "type": "boolean" }
+          }
+        },
+        "totalPrice": { "type": "number", "description": "The total price of the subscription." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "When the subscription was last updated." }
+      },
+      "required": ["userId", "tier", "frequency", "totalPrice"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User profile documents."
+    },
+    "/subscriptions/{subscriptionId}": {
+      "schema": "subscriptions",
+      "description": "Subscription documents."
+    }
+  }
+}
