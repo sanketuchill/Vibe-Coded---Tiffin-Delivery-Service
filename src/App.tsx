@@ -38,7 +38,7 @@ const numericInput = (
   value: number,
   onChange: (value: number) => void,
   helper?: string,
-): JSX.Element => (
+) => (
   <label className="block space-y-2">
     <span className="text-sm text-slate-200 font-medium">{label}</span>
     <input
